@@ -1,0 +1,95 @@
+﻿
+ 
+for ip in {101..115}; do sshpass -p "$PASSWORD" ssh root@10.51.2.$ip "ip route add 10.200.0.0/16 via 10.220.0.1 dev eth0"; done
+
+for ip in {11..19}; do sshpass -p "$PASSWORD" ssh root@10.51.20.$ip "ip route add 10.200.0.0/16 via 10.220.0.1 dev eth0"; done
+
+for ip in {21..23}; do sshpass -p "$PASSWORD" ssh root@10.51.2.$ip "ip route add 10.200.0.0/16 via 10.220.0.1 dev eth0"; done
+
+
+
+
+for ip in {21..23}; do sshpass -p "$PASSWORD" ssh root@10.51.2.$ip "cat >> /etc/sysconfig/network-scripts/route-eth0 <<EOF
+10.200.0.0/16 via 10.220.0.1 dev eth0
+EOF"; done
+
+
+#!/bin/bash
+
+# 设置密码变量（请自行替换为实际密码）
+PASSWORD="your_password"
+
+# 遍历 IP 范围
+for ip in {101..115}; do
+  # 打印目标 IP（SSH 连接前）
+  echo "Processing IP: 10.51.2.$ip"
+  
+  # 执行命令并检查结果
+  if sshpass -p "$PASSWORD" ssh root@10.51.2.$ip "ip route add 10.200.0.0/16 via 10.220.0.1 dev eth0"; then
+    echo "✅ Success: IP 10.51.2.$ip"
+  else
+    echo "❌ Failed: IP 10.51.2.$ip" >&2
+    continue  # 跳过当前 IP
+  fi
+done
+
+
+#!/bin/bash
+
+# 设置密码变量（请自行替换为实际密码）
+PASSWORD="your_password"
+
+# 遍历 IP 范围
+for ip in {101..115}; do
+  # 打印目标 IP（SSH 连接前）
+  echo "Processing IP: 10.51.2.$ip"
+  
+  # 执行命令并检查结果
+  if sshpass -p "$PASSWORD" ssh root@10.51.2.$ip "cat >> /etc/sysconfig/network-scripts/route-eth0 <<EOF
+10.200.0.0/16 via 10.220.0.1 dev eth0
+EOF"; then
+    echo "✅ Success: IP 10.51.2.$ip"
+  else
+    echo "❌ Failed: IP 10.51.2.$ip" >&2
+    continue  # 跳过当前 IP
+  fi
+done
+
+
+
+#下面这个是正确的。
+
+#!/bin/bash
+
+# 直接写入密码
+PASSWORD="your_password"
+
+# SSH 配置
+SSH_OPTS="-o ConnectTimeout=5 -o StrictHostKeyChecking=no"
+
+# 遍历目标 IP
+for ip in {11..19}; do
+  target_ip="10.51.20.$ip"
+  echo "Processing IP: $target_ip"
+
+  # 添加临时路由
+  if sshpass -p "$PASSWORD" ssh $SSH_OPTS root@"$target_ip" "ip route add 10.200.0.0/16 via 10.220.0.1 dev eth0"; then
+    echo "✅ Temp route added to $target_ip"
+  else
+    echo "❌ Failed to add temp route to $target_ip" >&2
+    # continue
+  fi
+
+  # 追加持久化配置
+  if sshpass -p "$PASSWORD" ssh $SSH_OPTS root@"$target_ip" << 'EOSS'
+[ -f /etc/sysconfig/network-scripts/route-eth0 ] || touch /etc/sysconfig/network-scripts/route-eth0
+if ! grep -qF '10.200.0.0/16 via 10.220.0.1 dev eth0' /etc/sysconfig/network-scripts/route-eth0; then
+  echo '10.200.0.0/16 via 10.220.0.1 dev eth0' >> /etc/sysconfig/network-scripts/route-eth0
+fi
+EOSS
+  then
+    echo "✅ Persistent route added to $target_ip"
+  else
+    echo "❌ Failed to add persistent route to $target_ip" >&2
+  fi
+done

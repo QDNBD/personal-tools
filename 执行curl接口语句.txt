@@ -1,0 +1,41 @@
+curl --location 'https://121.32.254.180/v2/analysis/files/reputation?_method=GET&token=377418215c4a2da7416c2a47e4495d875c57b8f85682045fc5e4fc870ed8de59' \
+--header 'Content-Type: application/json' \
+--header 'Accept-Language: en-US' \
+--data '{
+    "source": "NGAF",
+    "deviceId": "DB3EF0D2",
+    "deviceVersion": "AF8.0.8",
+    "fileMd5s": [
+        "a3bff99eae3c03081156040ec2bb174b",
+        "86800cbb2319f1aa727e055e701dcafa",
+        "f7dc4fbd9f8112ddda68e2c33147411f",
+        "b92b52729ae9eb1390ae7d129ecfb824",
+        "8c6218fce451e0f6871938eb22d0da30",
+        "26927a41ea566e3f20fb335129fca9d0",
+        "a0daa05547c937e2d6dcfcc9b092bb3e",
+        "0242546a89124926fd93789c3f9ecc00"
+    ]
+}'
+
+
+curl -k  --location 'https://172.25.2.110:30785/v2/analysis/files/reputation?_method=GET&token=377418215c4a2da7416c2a47e4495d87f663e03119ceeaf823e17dbac7e67ea8' \
+--header 'Content-Type: application/json' \
+--header 'Accept-Language: en-US' \
+--data '{
+    "source": "NGAF",
+    "deviceId": "DB3EF0D2",
+    "deviceVersion": "AF8.0.8",
+    "fileMd5s": [
+        "a3bff99eae3c03081156040ec2bb174b",
+        "86800cbb2319f1aa727e055e701dcafa",
+        "f7dc4fbd9f8112ddda68e2c33147411f",
+        "b92b52729ae9eb1390ae7d129ecfb824",
+        "8c6218fce451e0f6871938eb22d0da30",
+        "26927a41ea566e3f20fb335129fca9d0",
+        "a0daa05547c937e2d6dcfcc9b092bb3e",
+        "0242546a89124926fd93789c3f9ecc00"
+    ]
+}'
+
+
+	
