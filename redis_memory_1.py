@@ -1,24 +1,30 @@
 # coding=utf-8
+
 """
 使用方式：
 source /matrix/profile
-python redis_memory_usage.py
+python redis_memory_usage.py dnslib:* &
 """
+
 import logging
 import soapa_logging_v2
 from easy_util.dao.redis_util import RedisUtil
+from scia.dao.redisdb import RedisDao
 
-soapa_logging_v2.simple_config("redis-memory-usage-nta")
-logger = logging.getLogger("redis-memory-usage-nta")
+soapa_logging_v2.simple_config("redis-memory-usage-")
+logger = logging.getLogger("redis-memory-usage-")
+
 SCAN_COUNT = 10000
 
 
 class Redis(object):
     def __init__(self, scan_match):
-        # self.redis_cli = RedisUtil.get_redis_mq_db(db=11, socket_timeout=5)
-        # self.redis_cli = RedisUtil.get_redis_cluster_nta_mdp_db(socket_timeout=50)
-        self.redis_cli = RedisUtil.get_redis_ha_mul_db(11, socket_timeout=50)
         # self.redis_cli = RedisUtil.get_redis_cluster_ti_db(socket_timeout=5)
+        # self.redis_cli = RedisUtil.get_redis_cluster_nta_mdp_db(socket_timeout=50)
+        self.redis_cli = RedisUtil.get_redis_ha_mul_db(db=3, socket_timeout=50)
+        # self.redis_cli = RedisDao.get(target="redis.redis-ha", db=db,
+        #                               socket_timeout=50,
+        #                               **connection_kwargs)
         self.redis_iter = self.redis_cli.scan_iter(match=scan_match,
                                                    count=SCAN_COUNT)
 
@@ -41,18 +47,6 @@ class Redis(object):
         return self.get_next()
 
 
-def format_memory_size(size):
-    """将字节转换为更易读的格式（B、KB、MB、GB）。"""
-    if size < 1024:
-        return "{} B".format(size)
-    elif size < 1024 ** 2:
-        return "{:.2f} KB".format(size / 1024.0)
-    elif size < 1024 ** 3:
-        return "{:.2f} MB".format(size / (1024.0 ** 2))
-    else:
-        return "{:.2f} GB".format(size / (1024.0 ** 3))
-
-
 def get_redis_memory_usage():
     redis_obj = Redis("*")
     key_count_map = dict()
@@ -63,20 +57,22 @@ def get_redis_memory_usage():
             count += 1
             memory_use = redis_obj.redis_cli.execute_command("MEMORY USAGE",
                                                              key)
-            if memory_use is None:
-                logger.warning("Memory usage for key {} is None".format(key))
-                continue
-            # 获取前缀
+
+            # 获取前缀，获取前两部分 TODO 根据需要更改以下获取前缀的代码
             arr = key.split(":")
-            if len(arr) >= 1:
+            if len(arr) >= 2:
+                prefix = "".join([arr[0], ":", arr[1]])
+            elif len(arr) == 1:
                 prefix = arr[0]
             else:
                 continue
+
             # 数量累加
             if prefix in key_count_map:
                 key_count_map[prefix] += 1
             else:
                 key_count_map[prefix] = 1
+
             # 所需内存累加
             if prefix in key_memory_map:
                 key_memory_map[prefix] += memory_use

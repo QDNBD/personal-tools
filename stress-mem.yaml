@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: stress-mem
+  labels:
+    app: stress-mem
+spec:
+  selector:
+    matchLabels:
+      app: stress-mem
+  template:
+    metadata:
+      labels:
+        app: stress-mem
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: sz-k8s-slave-7.novalocal  # 你的目标节点
+      containers:
+        - name: stress-mem
+          image: polinux/stress:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              add: ["SYS_ADMIN"]
+          resources:
+            requests:
+              memory: "5Gi"
+              cpu: "500m"
+            limits:
+              memory: "30Gi"   # 大于你的测试值，防止OOM
+              cpu: "2000m"
+          command:
+            - stress
+            - --vm-bytes
+            - "30G"  # 修改为实际内存值
+            - --vm
+            - "1"    # 1个进程
+            - --timeout
+            - "300"  # 持续300秒
+      terminationGracePeriodSeconds: 35
